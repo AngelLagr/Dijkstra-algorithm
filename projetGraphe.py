@@ -2,7 +2,7 @@ from copy import deepcopy
 import math as mt
 import os
 
-Gexo10 = {
+gexo10 = {
         'A':{'duree':3,'precedent':set()},
         'B':{'duree':4,'precedent':{'A','I'}},
         'C':{'duree':1,'precedent':{'B'}},
@@ -46,12 +46,12 @@ def couleur_arc(dico_precedents:dict)->dict:
         graphe[sommet1]['precedent']=prec_color
     return graphe
 
-def niveau(G:dict)->list:
+def niveau(graph:dict)->list:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -60,7 +60,7 @@ def niveau(G:dict)->list:
         Renvoie une liste des sommets du graphe rangés par niveau dans l'ordre croissant.
 
     """
-    dic=deepcopy(G)
+    dic=deepcopy(graph)
     #Transformation du dictionnaire des suivants en un ensemble
     for sommet in dic.keys():
         dic[sommet]['precedent']=set(dic[sommet]['precedent'].keys())
@@ -88,7 +88,7 @@ def niveau(G:dict)->list:
                 liste[k].add(sommet) # est de niveau "k+1"
     return liste
 
-def dic2dot(dic:dict,fileName=None)->dict:
+def dic2dot(dic:dict,fileName=None)->str:
     txt_f = 'digraph G2 {\nrankdir=LR;\nnode [shape = Mrecord, style=filled];'
     for sommet,dico in dic.items():        
         plustot=dico['tot']
@@ -128,12 +128,12 @@ def prec2complet(dico:dict)->dict:
             dico[sommet_pre]['suivant'][sommet]='black'
     return dico
 ##################################################################################################################################################################
-def graph_fin(G:dict)->dict:
+def graph_fin(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -143,21 +143,21 @@ def graph_fin(G:dict)->dict:
 
     """
     D=dict()
-    for sommet, dico_s in G.items():
+    for sommet, dico_s in graph.items():
         dico_s['couleur']='black'
-        for sommet_pre in dico_s['precedent'].keys():
+        for _ in dico_s['precedent'].keys():
             if dico_s['suivant']=={}:
                 D[sommet]='black'
         
-    G['fin']={'duree':0,'precedent':D,'suivant':{},'couleur':'black'}
-    return prec2complet(G) # on réactualise les clés "suivant" pour le sommet fin
+    graph['fin']={'duree':0,'precedent':D,'suivant':{},'couleur':'black'}
+    return prec2complet(graph) # on réactualise les clés "suivant" pour le sommet fin
 ##################################################################################################################################################################
-def affecte_niveau(G:dict)->dict:
+def affecte_niveau(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -166,19 +166,19 @@ def affecte_niveau(G:dict)->dict:
         Renvoie le graphe donné en y ajoutant une clé "niveau" à tout ses sommets avec la bonne valeur associée.
 
     """
-    L=niveau(G)
-    for Niveau in range(0,len(L)):
-        for sommet, dico_s in G.items():
-            if sommet in L[Niveau]:
-                dico_s['niveau']=Niveau
-    return G
+    L=niveau(graph)
+    for niveau in range(0,len(L)):
+        for sommet, dico_s in graph.items():
+            if sommet in L[niveau]:
+                dico_s['niveau']=niveau
+    return graph
 ##################################################################################################################################################################
-def graphe2mpm(G:dict)->dict:
+def graphe2mpm(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -187,17 +187,17 @@ def graphe2mpm(G:dict)->dict:
         Ajoute les clés "tot" et "tard" à tout les sommets avec la valeur "_".
 
     """
-    for sommet,dico_s in G.items():
+    for sommet,dico_s in graph.items():
       dico_s['tot']='_'
       dico_s['tard']='_'
-    return G
+    return graph
 ##################################################################################################################################################################
-def sommetini(G:dict)->list:
+def sommetini(graph:dict)->list:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe
 
     Returns
@@ -207,18 +207,18 @@ def sommetini(G:dict)->list:
 
     """
     liste=[]
-    for sommet in G.keys():
-        if G[sommet]['precedent']=={}:
+    for sommet in graph.keys():
+        if graph[sommet]['precedent']=={}:
             liste.append(sommet)
     return(liste)
         
 
-def sommetatteignable(G:dict,s:str)->list:
+def sommetatteignable(graph:dict,s:str)->list:
     """
     
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe
         
     s : str
@@ -232,12 +232,12 @@ def sommetatteignable(G:dict,s:str)->list:
     liste=[[s]] #on commence avec le sommet initial
     sommetetudie=s
     fait=set(s) #on initialise un ensemble des sommets étudiés
-    while G[sommetetudie]['suivant']!={}: #tant que les sommets étudiés ont des sommets suivants
+    while graph[sommetetudie]['suivant']!={}: #tant que les sommets étudiés ont des sommets suivants
         for lsommet in liste:#pour les listes contenues dans "liste"
             lsuiv=[] #on initialise une liste qui contiendras les sommets suivants du sommet étudié
             for sommet in lsommet:#pour chaque sommet présent dans la liste de sommets étudiés
                 sommetetudie=sommet #on étudie un sommet à la fois
-                for sommetsuiv in G[sommetetudie]['suivant'] : #parmis tout les sommets suivants dans le sommet étudié
+                for sommetsuiv in graph[sommetetudie]['suivant'] : #parmis tout les sommets suivants dans le sommet étudié
                     if sommetsuiv not in fait: #si l'un de ces sommets n'a pas encore été traités
                         lsuiv.append(sommetsuiv)  #on le rajoute dans la liste "lsuiv"
                         fait=fait.union({sommetsuiv})
@@ -252,12 +252,12 @@ def sommetatteignable(G:dict,s:str)->list:
     return nvlliste
       
 
-def ford(G:dict,f:str)->int:
+def ford(graph:dict,f:str)->int:
     """
     
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
     f : str
         sommet.
@@ -268,23 +268,23 @@ def ford(G:dict,f:str)->int:
         Retourne la valeur du chemin le plus élévé juqu'au sommet f en partant de n'importe quel sommet initial.
     
     """
-    lniveau=niveau(G)  #on récupère la liste des sommets qui permettent d'atteindre le point f
+    lniveau=niveau(graph)  #on récupère la liste des sommets qui permettent d'atteindre le point f
     maximum=[]
-    for sommet0 in sommetini(G): # on étudie tous les potentiels s0 pour arriver à f
-       if f in sommetatteignable(G,sommet0):
-          P={list(G.keys())[i] for i in range(len(G))} #ensemble des sommets
+    for sommet0 in sommetini(graph): # on étudie tous les potentiels s0 pour arriver à f
+       if f in sommetatteignable(graph,sommet0):
+          P={list(graph.keys())[i] for i in range(len(graph))} #ensemble des sommets
           trace={sommet0:[0,None]} #initialisation coût s0
           for s in P-{sommet0}: #initialisation coûts associés aux sommets différents de s0
               trace[s]=[mt.inf,None]
           k=1
           while trace[f][0]==mt.inf:
             for y in lniveau[k]: #ensemble des sommets de niveau k          
-              value=[trace[x][0]+G[x]['duree'] for x in G[y]['precedent'] if x in sommetatteignable(G,sommet0)]
+              value=[trace[x][0]+graph[x]['duree'] for x in graph[y]['precedent'] if x in sommetatteignable(graph,sommet0)]
               if value!=[]: 
                 trace[y][0]=max(value)
       
-              for z in G[y]['precedent']:       
-                if trace[z][0]+G[z]['duree']==trace[y][0] and z in sommetatteignable(G,sommet0):
+              for z in graph[y]['precedent']:       
+                if trace[z][0]+graph[z]['duree']==trace[y][0] and z in sommetatteignable(graph,sommet0):
                   trace[y][1]=z 
             k+=1
           maximum.append(trace[f][0])    
@@ -296,12 +296,12 @@ def ford(G:dict,f:str)->int:
     return maxi
 
   
-def Plustot(G:dict)->dict:
+def plustot(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -310,16 +310,16 @@ def Plustot(G:dict)->dict:
         Renvoie le Graphe donné en paramêtre avec la clé 'tot' remplie par la valeur correspondante sur chacun de ses sommets.
 
     """
-    for sommet in G.keys(): # on ajoute la valeur associée aux sommets à la clé "tot"
-      G[sommet]['tot']=ford(G,sommet)
-    return G
+    for sommet in graph.keys(): # on ajoute la valeur associée aux sommets à la clé "tot"
+      graph[sommet]['tot']=ford(graph,sommet)
+    return graph
 ##################################################################################################################################################################
-def Plustard(G:dict)->dict:
+def plustard(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -329,31 +329,31 @@ def Plustard(G:dict)->dict:
 
 
     """
-    n=niveau(G)
-    trace={'fin':ford(G,'fin')}
+    n=niveau(graph)
+    trace={'fin':ford(graph,'fin')}
     
     for ensemble in n[:-1]: 
       for sommet in ensemble:
         trace[sommet]=mt.inf
-    k=G['fin']['niveau']
+    k=graph['fin']['niveau']
     
     while max([trace[i] for i in n[0]])==mt.inf: 
       for u in n[k-1]:
-        value=[trace[v]-G[u]['duree'] for v in G[u]['suivant']]
+        value=[trace[v]-graph[u]['duree'] for v in graph[u]['suivant']]
         if value!=[]:
             trace[u]=min(value) 
       k-=1
     
     for sommet in trace.keys():# on ajoute la valeur associée aux sommets à la clé "tard"
-      G[sommet]['tard']=trace[sommet]
-    return G
+      graph[sommet]['tard']=trace[sommet]
+    return graph
 ##################################################################################################################################################################
-def margeT(G:dict)->dict:
+def margeT(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -362,16 +362,16 @@ def margeT(G:dict)->dict:
         Renvoie le Graphe donné en paramêtre avec la clé 'MT' remplie par la valeur de la marge totale correspondante sur chacun de ses sommets.
 
     """
-    for sommet in G.keys():
-      G[sommet]['MT']=G[sommet]['tard']-G[sommet]['tot']
-    return G
+    for sommet in graph.keys():
+      graph[sommet]['MT']=graph[sommet]['tard']-graph[sommet]['tot']
+    return graph
 ##################################################################################################################################################################
-def margeL(G:dict)->dict:
+def margeL(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -380,20 +380,20 @@ def margeL(G:dict)->dict:
         Renvoie le Graphe donné en paramêtre avec la clé 'ML' remplie par la valeur de la marge libre correspondante sur chacun de ses sommets.
 
     """
-    for sommet in G.keys():
-      listemarge=[G[sommetsuiv]['tot'] - G[sommet]['tot'] - G[sommet]['duree'] for sommetsuiv in G[sommet]['suivant']]
+    for sommet in graph.keys():
+      listemarge=[graph[sommetsuiv]['tot'] - graph[sommet]['tot'] - graph[sommet]['duree'] for sommetsuiv in graph[sommet]['suivant']]
       if listemarge!=[]:
-        G[sommet]['ML']=min(listemarge)
+        graph[sommet]['ML']=min(listemarge)
       else:
-        G[sommet]['ML']=0
-    return G  
+        graph[sommet]['ML']=0
+    return graph  
 ##################################################################################################################################################################
-def affiche(G:dict)->None:
+def affiche(graph:dict)->None:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -403,19 +403,19 @@ def affiche(G:dict)->None:
 
     """
     print("sommet +tot +tard MT ML")
-    for sommet,dico in G.items():
+    for sommet,dico in graph.items():
         i1=len(sommet)
         i2=len(str(dico['tot']))
         i3=len(str(dico['tard']))
         i4=len(str(dico['MT']))
         print(sommet+(7-i1)*" "+str(dico['tot'])+(5-i2)*" "+str(dico['tard'])+(6-i3)*" "+str(dico['MT'])+(3-i4)*" "+str(dico['ML']))
 ##################################################################################################################################################################
-def critique(G:dict)->dict:
+def critique(graph:dict)->dict:
     """
 
     Parameters
     ----------
-    G : dict
+    graph : dict
         Graphe.
 
     Returns
@@ -424,14 +424,14 @@ def critique(G:dict)->dict:
         Colorie les sommets critiques en rouge sur le Graphe donné en paramêtre.
 
     """
-    for sommet in G.keys():
-      if G[sommet]['tot']==G[sommet]['tard']:
-        G[sommet]['couleur']='red'
-    return G
+    for sommet in graph.keys():
+      if graph[sommet]['tot']==graph[sommet]['tard']:
+        graph[sommet]['couleur']='red'
+    return graph
 
 #Test Exo 4.9#################################################################################################################################################
 print("Exo 4.9 :\n")
-Gra=critique(margeL(margeT(Plustot(Plustard(graphe2mpm(affecte_niveau(graph_fin(prec2complet(couleur_arc(dic_prec))))))))))
+Gra=critique(margeL(margeT(plustot(plustard(graphe2mpm(affecte_niveau(graph_fin(prec2complet(couleur_arc(dic_prec))))))))))
 dic2dot(Gra,'Exo4_9.dot')
 os.system("dot -Tpng Exo4_9.dot -o Exo4_9.png")
 affiche(Gra)
@@ -439,7 +439,7 @@ print("\n")
 
 #Test Exo 4.10################################################################################################################################################
 print("Exo 4.10 :\n")
-Gra=critique(margeL(margeT(Plustot(Plustard(graphe2mpm(affecte_niveau(graph_fin(prec2complet(couleur_arc(Gexo10))))))))))
+Gra=critique(margeL(margeT(plustot(plustard(graphe2mpm(affecte_niveau(graph_fin(prec2complet(couleur_arc(gexo10))))))))))
 dic2dot(Gra,'Exo4_10.dot')
 os.system("dot -Tpng Exo4_10.dot -o Exo4_10.png")
 affiche(Gra)
