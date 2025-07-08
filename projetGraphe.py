@@ -46,7 +46,7 @@ def couleur_arc(dico_precedents:dict)->dict:
         graphe[sommet1]['precedent']=prec_color
     return graphe
 
-def niveau(graph:dict)->list:
+def f_niveau(graph:dict)->list:
     """
 
     Parameters
@@ -152,7 +152,7 @@ def graph_fin(graph:dict)->dict:
     graph['fin']={'duree':0,'precedent':D,'suivant':{},'couleur':'black'}
     return prec2complet(graph) # on réactualise les clés "suivant" pour le sommet fin
 ##################################################################################################################################################################
-def affecte_niveau(graph:dict)->dict:
+def affecte_f_niveau(graph:dict)->dict:
     """
 
     Parameters
@@ -166,7 +166,7 @@ def affecte_niveau(graph:dict)->dict:
         Renvoie le graphe donné en y ajoutant une clé "niveau" à tout ses sommets avec la bonne valeur associée.
 
     """
-    L=niveau(graph)
+    L=f_niveau(graph)
     for niveau in range(0,len(L)):
         for sommet, dico_s in graph.items():
             if sommet in L[niveau]:
@@ -268,7 +268,7 @@ def ford(graph:dict,f:str)->int:
         Retourne la valeur du chemin le plus élévé juqu'au sommet f en partant de n'importe quel sommet initial.
     
     """
-    lniveau=niveau(graph)  #on récupère la liste des sommets qui permettent d'atteindre le point f
+    lniveau=f_niveau(graph)  #on récupère la liste des sommets qui permettent d'atteindre le point f
     maximum=[]
     for sommet0 in sommetini(graph): # on étudie tous les potentiels s0 pour arriver à f
        if f in sommetatteignable(graph,sommet0):
@@ -329,7 +329,7 @@ def plustard(graph:dict)->dict:
 
 
     """
-    n=niveau(graph)
+    n=f_niveau(graph)
     trace={'fin':ford(graph,'fin')}
     
     for ensemble in n[:-1]: 
@@ -431,7 +431,7 @@ def critique(graph:dict)->dict:
 
 #Test Exo 4.9#################################################################################################################################################
 print("Exo 4.9 :\n")
-Gra=critique(margeL(margeT(plustot(plustard(graphe2mpm(affecte_niveau(graph_fin(prec2complet(couleur_arc(dic_prec))))))))))
+Gra=critique(margeL(margeT(plustot(plustard(graphe2mpm(affecte_f_niveau(graph_fin(prec2complet(couleur_arc(dic_prec))))))))))
 dic2dot(Gra,'Exo4_9.dot')
 os.system("dot -Tpng Exo4_9.dot -o Exo4_9.png")
 affiche(Gra)
@@ -439,7 +439,7 @@ print("\n")
 
 #Test Exo 4.10################################################################################################################################################
 print("Exo 4.10 :\n")
-Gra=critique(margeL(margeT(plustot(plustard(graphe2mpm(affecte_niveau(graph_fin(prec2complet(couleur_arc(gexo10))))))))))
+Gra=critique(margeL(margeT(plustot(plustard(graphe2mpm(affecte_f_niveau(graph_fin(prec2complet(couleur_arc(gexo10))))))))))
 dic2dot(Gra,'Exo4_10.dot')
 os.system("dot -Tpng Exo4_10.dot -o Exo4_10.png")
 affiche(Gra)
